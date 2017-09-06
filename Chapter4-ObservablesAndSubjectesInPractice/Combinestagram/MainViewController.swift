@@ -52,6 +52,7 @@ class MainViewController: UIViewController {
 
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
+    print("Resources: \(RxSwift.Resources.total)")
   }
 
   @IBAction func actionClear() {
@@ -59,6 +60,16 @@ class MainViewController: UIViewController {
   }
 
   @IBAction func actionSave() {
+    guard let image = imagePreview.image else { return }
+    
+    PhotoWriter.save(image)
+      .subscribe(onError: { [weak self] error in
+        self?.showMessage("Error", description: error.localizedDescription)
+      }, onCompleted: { [weak self] in
+        self?.showMessage("Saved")
+        self?.actionClear()
+      })
+      .disposed(by: bag)
   }
 
   @IBAction func actionAdd() {
@@ -72,7 +83,7 @@ class MainViewController: UIViewController {
       }, onDisposed: {
         print("completed photo selection")
       })
-      .disposed(by: bag)
+      .disposed(by: photosViewController.bag)
     
     navigationController!.pushViewController(photosViewController, animated: true)
   }
@@ -85,8 +96,15 @@ class MainViewController: UIViewController {
   }
 
   func showMessage(_ title: String, description: String? = nil) {
-    let alert = UIAlertController(title: title, message: description, preferredStyle: .alert)
-    alert.addAction(UIAlertAction(title: "Close", style: .default, handler: { [weak self] _ in self?.dismiss(animated: true, completion: nil)}))
-    present(alert, animated: true, completion: nil)
+    // My solution
+//    showMessageObserver(title, description: description)
+//      .subscribe(onCompleted: {
+//        print("Dismissed")
+//      })
+//      .disposed(by: bag)
+    // Book Solution
+    alert(title: title, text: description)
+      .subscribe()
+      .disposed(by: bag)
   }
 }

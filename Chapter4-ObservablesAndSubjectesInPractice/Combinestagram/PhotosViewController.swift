@@ -32,6 +32,8 @@ class PhotosViewController: UICollectionViewController {
     return selectedPhotosSubject.asObservable()
   }
   
+  let bag = DisposeBag()
+  
   // MARK: private properties
   
   fileprivate let selectedPhotosSubject = PublishSubject<UIImage>()
@@ -60,7 +62,7 @@ class PhotosViewController: UICollectionViewController {
 
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
-    
+    selectedPhotosSubject.onCompleted()
   }
 
   // MARK: UICollectionView
