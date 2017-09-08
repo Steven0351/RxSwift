@@ -72,7 +72,6 @@ class PhotosViewController: UICollectionViewController {
       .disposed(by: bag)
     
     authorized
-      .skip(1)
       .takeLast(1)
       .filter { $0 == false }
       .subscribe(onNext: { [weak self] _ in
