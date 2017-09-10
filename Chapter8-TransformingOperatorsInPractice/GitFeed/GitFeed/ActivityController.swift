@@ -30,7 +30,11 @@ class ActivityController: UITableViewController {
   let repo = "ReactiveX/RxSwift"
 
   fileprivate let events = Variable<[Event]>([])
+  fileprivate let lastModified = Variable<NSString?>(nil)
   fileprivate let bag = DisposeBag()
+  
+  private let eventsFileURL = cachedFileURL("events.plist")
+  private let modifiedFileURL = cachedFileURL("modified.txt")
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -44,28 +48,80 @@ class ActivityController: UITableViewController {
     refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
     refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
 
+    let eventsArray = (NSArray(contentsOf: eventsFileURL)) as? [[String: Any]] ?? []
+    events.value = eventsArray.flatMap(Event.init)
+    
+    lastModified.value = try? NSString(contentsOf: modifiedFileURL, usedEncoding: nil)
+    
     refresh()
   }
 
   func refresh() {
-    fetchEvents(repo: repo)
+    DispatchQueue.global(qos: .background).async { [weak self] in
+      
+      // My solution
+      // guard let repoName = self?.repo else { return }
+      // self?.fetchEvents(repo: repoName)
+      // Book solution
+      guard let strongSelf = self else { return }
+      strongSelf.fetchEvents(repo: strongSelf.repo)
+    }
   }
 
   func fetchEvents(repo: String) {
-    let response = Observable.from([repo])
-      .map { urlString -> URL in
-        return URL(string: "https://api.github.com/repos/\(urlString)/events")!
-      }
-      .map { url -> URLRequest in
+//    let response = Observable.from([repo])
+//      .map { urlString -> URL in
+//        return URL(string: "https://api.github.com/repos/\(urlString)/events")!
+//      }
+//      .map { [weak self] url -> URLRequest in
+//        var request = URLRequest(url: url)
+//        if let modifiedHeader = self?.lastModified.value {
+//          request.addValue(modifiedHeader as String, forHTTPHeaderField: "Last-Modified")
+//        }
+//        return request
+//      }
+//      .flatMap { request -> Observable<(HTTPURLResponse, Data)> in
+//        print("main: \(Thread.isMainThread)")
+//        return URLSession.shared.rx.response(request: request)
+//      }
+//      .shareReplay(1)
+//    
+    // My solution - still crashing at the moment...
+    let response = Observable.from(["https://api.github.com/search/repositories?q=language:swift&per_page=5"])
+      .map { urlString -> URLRequest in
+        let url = URL(string: urlString)!
         return URLRequest(url: url)
       }
+      .flatMap { request -> Observable<Any> in
+        return URLSession.shared.rx.json(request: request)
+      }
+      .flatMap { rawJson -> Observable<String> in
+        guard let json = rawJson as? [String: Any],
+          let items = json["items"] as? [[String: Any]] else { return Observable.never() }
+        
+        let repos = items.flatMap { $0["full_name"] } as! [String]
+
+        return Observable.from(repos)
+      }
+      .map { urlString -> URL in
+        return URL(string: "https://api.github.com/repos/\(urlString)/events?per_page=5")!
+      }
+      .map { [weak self] url -> URLRequest in
+        var request = URLRequest(url: url)
+        if let modifiedHeader = self?.lastModified.value {
+          request.addValue(modifiedHeader as String, forHTTPHeaderField: "Last-Modified")
+        }
+        return request
+      }
       .flatMap { request -> Observable<(HTTPURLResponse, Data)> in
+        print("main: \(Thread.isMainThread)")
         return URLSession.shared.rx.response(request: request)
       }
       .shareReplay(1)
     
     response
       .filter { response, _ in
+        print("main: \(Thread.isMainThread)")
         return 200 ..< 300 ~= response.statusCode
       }
       .map { _, data -> [[String: Any]] in
@@ -77,16 +133,50 @@ class ActivityController: UITableViewController {
         return objects.count > 0
       }
       .map { objects in
-        return objects.map(Event.init)
+        return objects.flatMap(Event.init)
       }
       .subscribe(onNext: { [weak self] newEvents in
         self?.processEvents(newEvents)
       })
       .disposed(by: bag)
+    
+    response
+      .filter { response, _ in
+        return 200 ..< 400 ~= response.statusCode
+      }
+      .flatMap { response, _ -> Observable<NSString> in
+        guard let value = response.allHeaderFields["Last-Modified"] as? NSString else { return Observable.never() }
+        return Observable.just(value)
+      }
+      .subscribe(onNext: { [weak self] modifiedHeader in
+        guard let strongSelf = self else { return }
+        strongSelf.lastModified.value = modifiedHeader
+        try? modifiedHeader.write(to: strongSelf.modifiedFileURL, atomically: true, encoding: String.Encoding.utf8.rawValue)
+      })
+      .disposed(by: bag)
+    
   }
 
   func processEvents(_ newEvents: [Event]) {
+    var updatedEvents = newEvents + events.value
+    if updatedEvents.count > 50 {
+      updatedEvents = Array<Event>(updatedEvents.prefix(upTo: 50))
+    }
     
+    events.value = updatedEvents
+    
+    print("main: \(Thread.isMainThread)")
+    
+    // My solution - same as book solution
+    DispatchQueue.main.async { [weak self] in
+      print("main: \(Thread.isMainThread)")
+      self?.tableView.reloadData()
+      self?.refreshControl?.endRefreshing()
+    }
+    
+    
+    let eventsArray = updatedEvents.map{ $0.dictionary } as NSArray
+    eventsArray.write(to: eventsFileURL, atomically: true)
   }
   
   // MARK: - Table Data Source
@@ -103,4 +193,11 @@ class ActivityController: UITableViewController {
     cell.imageView?.kf.setImage(with: event.imageUrl, placeholder: UIImage(named: "blank-avatar"))
     return cell
   }
+}
+
+func cachedFileURL(_ fileName: String) -> URL {
+  return FileManager.default
+    .urls(for: .cachesDirectory, in: .allDomainsMask)
+    .first!
+    .appendingPathComponent(fileName)
 }
