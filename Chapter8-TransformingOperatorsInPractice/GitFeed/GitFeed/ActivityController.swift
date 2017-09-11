@@ -86,7 +86,7 @@ class ActivityController: UITableViewController {
 //      }
 //      .shareReplay(1)
 //    
-    // My solution - still crashing at the moment...
+    // My solution - only one or two minor differences from the book solution!
     let response = Observable.from(["https://api.github.com/search/repositories?q=language:swift&per_page=5"])
       .map { urlString -> URLRequest in
         let url = URL(string: urlString)!
