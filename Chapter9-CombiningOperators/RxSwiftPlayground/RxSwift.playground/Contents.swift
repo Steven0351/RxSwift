@@ -193,7 +193,7 @@ example(of: "switchLatest") {
   source.onNext(three)
   two.onNext("Why dont you see me")
   one.onNext("I'm alone help me")
-  three.onNext("Hey it's three, I wim")
+  three.onNext("Hey it's three, I win")
   
   source.onNext(one)
   one.onNext("Nope, it's me, one!")
