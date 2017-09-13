@@ -29,12 +29,19 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   @IBOutlet var tableView: UITableView!
   
   let categories = Variable<[EOCategory]>([])
+  let percentDownloaded = Variable<Int>(0)
   let disposeBag = DisposeBag()
   
+  var activityView = UIActivityIndicatorView()
+  var progressBar = UIProgressView()
 
   override func viewDidLoad() {
     super.viewDidLoad()
-
+    
+    // Challenge 1
+    navigationItem.rightBarButtonItem = UIBarButtonItem(customView: activityView)
+    activityView.color = .black
+    
     categories
       .asObservable()
       .subscribe(onNext: { [weak self] _ in
@@ -48,6 +55,11 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   }
 
   func startDownload() {
+    // Challenge 1 - Book solution has the activity view start animating in viewDidLoad
+    DispatchQueue.main.async {
+      self.activityView.startAnimating()
+    }
+    
     let eoCategories = EONET.categories
     let downloadedEvents = eoCategories.flatMap { categories in
       return Observable.from(categories.map { category in
@@ -70,14 +82,20 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
       }
     }
 
-      
+    // Challenge 1 - Book solution has it stop animating at the end of updatedCategories. Having it here achieves the same result.
     eoCategories
       .concat(updatedCategories)
+      .do(onCompleted: { [weak self] _ in
+        DispatchQueue.main.async {
+          self?.activityView.stopAnimating()
+        }
+      })
       .bind(to: categories)
       .disposed(by: disposeBag)
   }
   
   // MARK: UITableViewDataSource
+  
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     return categories.value.count
   }
@@ -91,7 +109,12 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   }
   
   // MARK: UITableViewDelegate
+  func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+    return "Downloading: \(percentDownloaded.value)"
+  }
   
+  
+
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     let category = categories.value[indexPath.row]
     if !category.events.isEmpty {
