@@ -29,11 +29,12 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   @IBOutlet var tableView: UITableView!
   
   let categories = Variable<[EOCategory]>([])
-  let percentDownloaded = Variable<Int>(0)
   let disposeBag = DisposeBag()
   
   var activityView = UIActivityIndicatorView()
   var progressBar = UIProgressView()
+  var percentDownloaded: Float = 0.0
+  var count = 0
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -60,6 +61,7 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
       self.activityView.startAnimating()
     }
     
+    
     let eoCategories = EONET.categories
     let downloadedEvents = eoCategories.flatMap { categories in
       return Observable.from(categories.map { category in
@@ -82,6 +84,7 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
       }
     }
 
+
     // Challenge 1 - Book solution has it stop animating at the end of updatedCategories. Having it here achieves the same result.
     eoCategories
       .concat(updatedCategories)
@@ -92,6 +95,8 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
       })
       .bind(to: categories)
       .disposed(by: disposeBag)
+    
+    
   }
   
   // MARK: UITableViewDataSource
@@ -110,9 +115,13 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   
   // MARK: UITableViewDelegate
   func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-    return "Downloading: \(percentDownloaded.value)"
+    return "Downloading: \(percentDownloaded)%"
   }
   
+  func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+    return progressBar
+  }
+
   
 
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
