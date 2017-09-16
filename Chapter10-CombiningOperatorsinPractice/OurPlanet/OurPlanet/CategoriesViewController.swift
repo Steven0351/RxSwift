@@ -30,6 +30,7 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
   
   let categories = Variable<[EOCategory]>([])
   let disposeBag = DisposeBag()
+  let download = DownloadView()
   
   var activityView = UIActivityIndicatorView()
   var progressBar = UIProgressView()
@@ -42,6 +43,10 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
     // Challenge 1
     navigationItem.rightBarButtonItem = UIBarButtonItem(customView: activityView)
     activityView.color = .black
+    
+    // Challenge 2 - Used help - could not figure out
+    view.addSubview(download)
+    view.layoutIfNeeded()
     
     categories
       .asObservable()
@@ -83,16 +88,34 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
         }
       }
     }
+    .do(onCompleted: { [weak self] _ in
+      DispatchQueue.main.async {
+        self?.activityView.stopAnimating()
+        self?.download.isHidden = true
+      }
+    })
+    
+    eoCategories.flatMap { categories in
+      return updatedCategories.scan(0) { count, _ in
+        return count + 1
+      }
+      .startWith(0)
+      .map { ($0, categories.count) }
+    }
+    .subscribe(onNext: { tuple in
+      DispatchQueue.main.async { [weak self] in
+        let progress = Float(tuple.0) / Float(tuple.1)
+        self?.download.progress.progress = progress
+        let percent = Int(progress * 100.0)
+        self?.download.label.text = "Download: \(percent)%"
+      }
+    })
+    .disposed(by: disposeBag)
 
 
     // Challenge 1 - Book solution has it stop animating at the end of updatedCategories. Having it here achieves the same result.
     eoCategories
       .concat(updatedCategories)
-      .do(onCompleted: { [weak self] _ in
-        DispatchQueue.main.async {
-          self?.activityView.stopAnimating()
-        }
-      })
       .bind(to: categories)
       .disposed(by: disposeBag)
     
