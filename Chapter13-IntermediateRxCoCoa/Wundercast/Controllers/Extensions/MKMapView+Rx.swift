@@ -50,9 +50,9 @@ extension Reactive where Base: MKMapView {
   
   // My solution for challenge 1
   
-  var moveToCoordinates: UIBindingObserver<Base, CLLocation> {
+  var moveToCoordinates: UIBindingObserver<Base, CLLocationCoordinate2D> {
     return UIBindingObserver(UIElement: self.base) { mapview, location in
-      mapview.setCenter(location.coordinate, animated: true)
+      mapview.setCenter(location, animated: true)
     }
   }
   

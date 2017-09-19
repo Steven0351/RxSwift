@@ -80,6 +80,15 @@ class ViewController: UIViewController {
         .catchErrorJustReturn(ApiController.Weather.dummy)
     }
     
+    let weatherAround = geoLocation.flatMap { location in
+      return Observable.from(ApiController.shared.currentWeatherAround(lat: location.coordinate.latitude, lon: location.coordinate.longitude))
+    }
+    .merge()
+    
+
+    
+  
+    
     let searchInput = searchCityName.rx.controlEvent(.editingDidEndOnExit).asObservable()
       .map { self.searchCityName.text }
       .filter { ($0 ?? "").characters.count > 0 }
@@ -100,7 +109,13 @@ class ViewController: UIViewController {
     }
     
     let search = Observable.from([
-        geoSearch, textSearch, mapSearch
+        geoSearch, textSearch, mapSearch, weatherAround
+      ])
+      .merge()
+      .asDriver(onErrorJustReturn: ApiController.Weather.dummy)
+    
+    let locationDriver = Observable.from([
+        geoSearch, textSearch
       ])
       .merge()
       .asDriver(onErrorJustReturn: ApiController.Weather.dummy)
@@ -155,7 +170,10 @@ class ViewController: UIViewController {
     search.map { [$0.overlay()] }
       .drive(mapView.rx.overlays)
       .disposed(by: bag)
-
+    
+    locationDriver.map { $0.coordinate }
+      .drive(mapView.rx.moveToCoordinates)
+      .disposed(by: bag)
 
   }
 

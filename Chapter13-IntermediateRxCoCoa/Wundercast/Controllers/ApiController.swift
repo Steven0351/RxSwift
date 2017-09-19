@@ -72,6 +72,19 @@ class ApiController {
       )
     }
   }
+  
+  func currentWeatherAround(lat: Double, lon: Double) -> [Observable<Weather>] {
+    let latitudeOffsets: [Double] = [-1, -0.5, 0.5, 1]
+    let longitudeOffsets = latitudeOffsets
+    var array = [Observable<Weather>]()
+    
+    for latOffset in latitudeOffsets {
+      for longOffset in longitudeOffsets {
+        array.append(currentWeather(lat: lat + latOffset, lon: lon + longOffset))
+      }
+    }
+    return array
+  }
 
   //MARK: - Private Methods
 
