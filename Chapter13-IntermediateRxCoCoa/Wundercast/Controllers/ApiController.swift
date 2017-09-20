@@ -61,6 +61,7 @@ class ApiController {
   }
 
   func currentWeather(lat: Double, lon: Double) -> Observable<Weather> {
+    print("requesting")
     return buildRequest(pathComponent: "weather", params: [("lat", "\(lat)"), ("lon", "\(lon)")]).map() { json in
       return Weather(
         cityName: json["name"].string ?? "Unknown",
@@ -73,8 +74,8 @@ class ApiController {
     }
   }
   
-  func currentWeatherAround(lat: Double, lon: Double) -> [Observable<Weather>] {
-    let latitudeOffsets: [Double] = [-1, -0.5, 0.5, 1]
+  func currentWeatherAround(lat: Double, lon: Double) -> Observable<[Weather]> {
+    let latitudeOffsets: [Double] = [-1, 0, -1]
     let longitudeOffsets = latitudeOffsets
     var array = [Observable<Weather>]()
     
@@ -83,7 +84,9 @@ class ApiController {
         array.append(currentWeather(lat: lat + latOffset, lon: lon + longOffset))
       }
     }
-    return array
+    return Observable.from(array)
+      .merge()
+      .toArray()
   }
 
   //MARK: - Private Methods
