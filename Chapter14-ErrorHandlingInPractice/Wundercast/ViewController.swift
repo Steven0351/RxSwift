@@ -54,6 +54,10 @@ class ViewController: UIViewController {
     // Do any additional setup after loading the view, typically from a nib.
 
     style()
+    
+    if RxReachability.shared.startMonitor("openweathermap.org") == false {
+      print("Reachability failed!")
+    }
 
     keyButton.rx.tap.subscribe(onNext: {
       self.requestKey()
@@ -82,6 +86,29 @@ class ViewController: UIViewController {
       return ApiController.shared.currentWeather(lat: location.coordinate.latitude, lon: location.coordinate.longitude)
         .catchErrorJustReturn(ApiController.Weather.empty)
     }
+    
+    
+    
+    let retryHandler: (Observable<Error>) -> Observable<Int> = { e in
+      return e.flatMapWithIndex { (error, attempt) -> Observable<Int> in
+        if attempt >= self.maxAttempts - 1 {
+          return Observable.error(error)
+        } else if let casted = error as? ApiController.ApiError, casted == .invalidKey {
+          return ApiController.shared.apiKey
+            .filter { print("key changed"); return $0 != "" }
+            .map { _ in return 1 }
+        } else if let casted = error as? NSError, casted.code == -1009 {
+          print("Internet down")
+          return RxReachability.shared.status
+            .filter { print("value changed"); return $0 == .online }
+            .map { _ in return 1 }
+        }
+        print("== retrying after \(attempt + 1) seconds ==")
+        return Observable<Int>.timer(Double(attempt + 1), scheduler: MainScheduler.instance).take(1)
+      }
+    }
+    
+    
 
     let searchInput = searchCityName.rx.controlEvent(.editingDidEndOnExit).asObservable()
       .map { self.searchCityName.text }
@@ -93,16 +120,13 @@ class ViewController: UIViewController {
           if let text = text {
             self.cache[text] = data
           }
-        })
-        .retryWhen { e in
-          return e.flatMapWithIndex { (error, attempt) -> Observable<Int> in
-            if attempt >= self.maxAttempts - 1 {
-              return Observable.error(error)
-            }
-            print("== retrying after \(attempt + 1) seconds ==")
-            return Observable<Int>.timer(Double(attempt + 1), scheduler: MainScheduler.instance).take(1)
+        }, onError: { [weak self] e in
+          guard let strongSelf = self else { return }
+          DispatchQueue.main.async {
+            strongSelf.showError(error: e)
           }
-        }
+        })
+        .retryWhen(retryHandler)
         .catchError { error in
           if let text = text, let cachedData = self.cache[text] {
             return Observable.just(cachedData)
@@ -186,6 +210,21 @@ class ViewController: UIViewController {
     alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.destructive))
 
     self.present(alert, animated: true)
+  }
+  
+  func showError(error e: Error) {
+    if let e = e as? ApiController.ApiError {
+      switch e {
+      case .cityNotFound:
+        InfoView.showIn(viewController: self, message: "City name is invalid")
+      case .serverFailure:
+        InfoView.showIn(viewController: self, message: "Server error")
+      case .invalidKey:
+        InfoView.showIn(viewController: self, message: "Key is invalid")
+      }
+    } else {
+      InfoView.showIn(viewController: self, message: "An error occured")
+    }
   }
 
   // MARK: - Style
