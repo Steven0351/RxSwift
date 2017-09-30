@@ -73,19 +73,31 @@ extension Reactive where Base: URLSession {
   
   func string(request: URLRequest) -> Observable<String> {
     return data(request: request).map { data in
-      return String(data: data, encoding: .utf8) ?? ""
+      // book solution didn't include this, it left the default with the nil coalescing
+      guard let string = String(data: data, encoding: .utf8) else { throw RxURLSessionError.deserializationFailed }
+      return string
     }
   }
   
   func json(request: URLRequest) -> Observable<JSON> {
     return data(request: request).map { data in
-      return JSON(data: data)
+      let json = JSON(data: data)
+      // I didn't think this was part of the question because it was talking about returning empty strings and images
+      // I also probably would not have gotten this because I wasn't aware of NSNull or the .object because I didn't look
+      // at the SwiftyJSON source.
+      if json.object is NSNull {
+        throw RxURLSessionError.deserializationFailed
+      } else {
+        return json
+      }
     }
   }
   
   func image(request: URLRequest) -> Observable<UIImage> {
     return data(request: request).map { data in
-      return UIImage(data: data) ?? UIImage()
+      // Book solution used if-let syntax instead of guard-let
+      guard let image = UIImage(data: data) else { throw RxURLSessionError.deserializationFailed }
+      return image
     }
   }
 }
