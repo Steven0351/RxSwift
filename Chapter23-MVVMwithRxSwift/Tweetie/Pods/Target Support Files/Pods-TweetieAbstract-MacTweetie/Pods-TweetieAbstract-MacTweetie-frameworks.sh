@@ -110,7 +110,6 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealm-macOS/RxRealm.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealmDataSources-macOS/RxRealmDataSources.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxSwift-macOS/RxSwift.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/RxTest-macOS/RxTest.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Then-macOS/Then.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Unbox-macOS/Unbox.framework"
 fi
@@ -123,7 +122,6 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealm-macOS/RxRealm.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealmDataSources-macOS/RxRealmDataSources.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxSwift-macOS/RxSwift.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/RxTest-macOS/RxTest.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Then-macOS/Then.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Unbox-macOS/Unbox.framework"
 fi

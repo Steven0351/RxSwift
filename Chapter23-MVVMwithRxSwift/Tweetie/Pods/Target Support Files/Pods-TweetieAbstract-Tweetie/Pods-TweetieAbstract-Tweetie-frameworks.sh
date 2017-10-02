@@ -111,7 +111,6 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealm-iOS/RxRealm.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealmDataSources-iOS/RxRealmDataSources.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxSwift-iOS/RxSwift.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/RxTest-iOS/RxTest.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Then-iOS/Then.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Unbox-iOS/Unbox.framework"
 fi
@@ -125,7 +124,6 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealm-iOS/RxRealm.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxRealmDataSources-iOS/RxRealmDataSources.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/RxSwift-iOS/RxSwift.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/RxTest-iOS/RxTest.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Then-iOS/Then.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Unbox-iOS/Unbox.framework"
 fi

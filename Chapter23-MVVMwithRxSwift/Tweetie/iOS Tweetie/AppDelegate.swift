@@ -33,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   let testing = NSClassFromString("XCTest") != nil
 
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-    if testing {
+    if !testing {
       let feedNavigation = window!.rootViewController! as! UINavigationController
       navigator.show(segue: .listTimeline(account, list), sender: feedNavigation)
     }

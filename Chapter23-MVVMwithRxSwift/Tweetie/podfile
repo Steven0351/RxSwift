@@ -11,7 +11,6 @@ abstract_target 'TweetieAbstract' do
     pod 'Reachability', '3.2.0'
     pod 'Kingfisher', '3.9.1'
     pod 'RxRealmDataSources', '0.2.1'
-    pod 'RxTest', '3.4'
     
     target 'Tweetie' do
         pod 'RxDataSources', '1.0.3'

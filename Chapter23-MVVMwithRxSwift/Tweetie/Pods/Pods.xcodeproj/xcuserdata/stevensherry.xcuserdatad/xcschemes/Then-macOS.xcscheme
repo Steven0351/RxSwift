@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7EC34FE6CB04CB007F94351C80AC8C88"
+               BlueprintIdentifier = "A63F0BD74C8250833A0E19E43E103561"
                BuildableName = "Then.framework"
                BlueprintName = "Then-macOS"
                ReferencedContainer = "container:Pods.xcodeproj">
@@ -45,7 +45,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7EC34FE6CB04CB007F94351C80AC8C88"
+            BlueprintIdentifier = "A63F0BD74C8250833A0E19E43E103561"
             BuildableName = "Then.framework"
             BlueprintName = "Then-macOS"
             ReferencedContainer = "container:Pods.xcodeproj">
