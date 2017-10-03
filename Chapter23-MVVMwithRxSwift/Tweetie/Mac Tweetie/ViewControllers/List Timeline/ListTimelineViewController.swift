@@ -55,6 +55,8 @@ class ListTimelineViewController: NSViewController {
       cell.update(with: tweet)
     }
     
+    dataSource.dataSource = self as? NSTableViewDataSource
+    
     let binder = tableView.rx.realmChanges(dataSource)
     
     viewModel.tweets

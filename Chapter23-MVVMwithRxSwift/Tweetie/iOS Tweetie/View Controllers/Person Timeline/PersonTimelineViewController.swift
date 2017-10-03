@@ -53,7 +53,25 @@ class PersonTimelineViewController: UIViewController {
 
   func bindUI() {
     //bind the title
+    viewModel.tweets.asDriver()
+      .map { tweets -> String in
+        return tweets.first?.name ?? "failed"
+      }
+      .drive(rx.title)
+      .disposed(by: bag)
+    
     //configure an animated table data source
+    let dataSource = crateTweetsDataSource()
+    
+    viewModel.tweets
+      .map { tweets -> TweetSection in
+        return TweetSection(model: "test", items: tweets)
+      }
+      .asDriver()
+
+    
+    
+    
     //bind the tweets to the table view
   }
 

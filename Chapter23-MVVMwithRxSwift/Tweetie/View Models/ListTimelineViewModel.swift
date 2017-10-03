@@ -68,8 +68,8 @@ class ListTimelineViewModel {
   // MARK: - Methods
   private func bindOutput() {
     //bind tweets
-    guard let realm = try? Realm() else { return }
-    tweets = Observable.changesetFrom(realm.objects(Tweet.self))
+    guard let realm = try? Realm() else { print("failed in ListTimelineViewModel"); return }
+    tweets = Observable.changeset(from: realm.objects(Tweet.self))
     
     //bind if an account is available
     loggedIn = account

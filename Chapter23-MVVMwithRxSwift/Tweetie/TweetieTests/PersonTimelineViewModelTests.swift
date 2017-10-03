@@ -43,6 +43,7 @@ class PersonTimelineViewModelTests: XCTestCase {
     let allTweets = TestData.tweetsJSON
 
     var values = [Tweet]()
+    
     let subscription = viewModel.tweets
       .filter { $0.count == allTweets.count }
       .drive(onNext: {

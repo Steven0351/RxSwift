@@ -51,7 +51,7 @@ class ListPeopleViewController: NSViewController {
   func bindUI() {
     //show tweets in table view
     viewModel.people.asDriver()
-      .drive(onNext: { [weak self] _ in self?.tableView.reloadData() })
+      .drive(onNext: { [weak self] x in print(x?.first?.name ?? "nada"); self?.tableView.reloadData() })
       .disposed(by: bag)
 
     //show message when no account available
