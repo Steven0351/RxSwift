@@ -43,21 +43,53 @@ class TasksViewController: UIViewController, BindableType {
     tableView.rowHeight = UITableViewAutomaticDimension
     tableView.estimatedRowHeight = 60
     
+    
     configureDataSource()
     
     viewModel.sectionedItems
       .bind(to: tableView.rx.items(dataSource: dataSource))
       .disposed(by: self.rx_disposeBag)
+    
+    
+    
+    // This will only allow swiping tableView cells if the tableView has a subscription to .rx.itemDeleted
+    setEditing(true, animated: false)
   }
   
   func bindViewModel() {
+    newTaskButton.rx.action = viewModel.onCreateTask()
     
+    tableView.rx.itemSelected
+      .map { [unowned self] indexPath in
+        try! self.dataSource.model(at: indexPath) as! TaskItem
+      }
+      .subscribe(viewModel.editAction.inputs)
+      .disposed(by: rx_disposeBag)
+    
+    tableView.rx.itemDeleted
+      .map { [unowned self] indexPath in
+        try! self.dataSource.model(at: indexPath) as! TaskItem
+      }
+      .subscribe(viewModel.deleteAction.inputs)
+      .disposed(by: rx_disposeBag)
+    
+    viewModel.statistics
+      .map {
+        return "To Do: \($0.todo), Completed: \($0.done)"
+      }
+      .bind(to: statisticsLabel.rx.text)
+      .disposed(by: rx_disposeBag)
   }
   
   fileprivate func configureDataSource() {
     dataSource.titleForHeaderInSection = { dataSource, index in
       dataSource.sectionModels[index].model
     }
+    
+    dataSource.canEditRowAtIndexPath = { _, _ in
+      return true
+    }
+    
     
     dataSource.configureCell = { [weak self] dataSource, tableView, indexPath, item in
       let cell = tableView.dequeueReusableCell(withIdentifier: "TaskItemCell", for: indexPath) as! TaskItemTableViewCell

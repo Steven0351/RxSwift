@@ -53,10 +53,51 @@ struct TasksViewModel {
           TaskSection(model: "Done Tasks", items: doneTasks.toArray())
         ]
       }
-    
-    
+  }
+  
+  var statistics: Observable<TaskStatistics> {
+//    return self.taskService.tasks()
+//      .map { results in
+//        let dueTasks = results
+//          .filter("checked == nil")
+//          .toArray()
+//          .count
+//        let doneTasks = results
+//          .filter("checked != nil")
+//          .toArray()
+//          .count
+//        
+//        return TaskStatistics(todo: dueTasks, done: doneTasks)
+//      }
+    return self.taskService.calculateStatistics()
   }
 
+  // The use of "this" as the local variable is using the input of self in the lazy initializer. This is because a
+  // closure cannot implicitly capture a mutating self parameter, as well as the inability to create weak or unowned
+  // references to structs
+  lazy var editAction: Action<TaskItem, Void> = { this in
+    return Action { task in
+      let editViewModel = EditTaskViewModel(task: task,
+                                            coordinator: this.sceneCoordinator,
+                                            updateAction: this.onUpdateTitle(task: task))
+      return this.sceneCoordinator.transition(to: Scene.editTask(editViewModel), type: .modal)
+    }
+  }(self)
+  
+  // My solution - Challenge 1
+//  lazy var deleteAction: Action<TaskItem, Void> = { this in
+//    return Action { task in
+//      return this.taskService.delete(task: task)
+//    }
+//  }(self)
+  // Book Solution - Challenge 1
+  
+  lazy var deleteAction: Action<TaskItem, Void> = { (service: TaskServiceType) in
+    return Action { item in
+      return service.delete(task: item)
+    }
+  }(self.taskService)
+  
   func onToggle(task: TaskItem) -> CocoaAction {
     return CocoaAction {
       return self.taskService.toggle(task: task).map { _ in }
@@ -72,6 +113,25 @@ struct TasksViewModel {
   func onUpdateTitle(task: TaskItem) -> Action<String, Void> {
     return Action { newTitle in
       return self.taskService.update(task: task, title: newTitle).map { _ in }
+    }
+  }
+  
+  func onCreateTask() -> CocoaAction {
+    /*
+     Since self is a struct, the action gets its own "copy" of the struct (optimized by Swift to being just a reference)
+     and there is no circular reference - no risk of leaking memory! That's why you don't see [weak self] or 
+     [unowned self] here, which don't apply to value types.
+    */
+    return CocoaAction { _ in
+      return self.taskService
+        .createTask(title: "")
+        .flatMap { task -> Observable<Void> in
+          let editViewModel = EditTaskViewModel(task: task,
+                                                coordinator: self.sceneCoordinator,
+                                                updateAction: self.onUpdateTitle(task: task),
+                                                cancelAction: self.onDelete(task: task))
+          return self.sceneCoordinator.transition(to: Scene.editTask(editViewModel), type: .modal)
+        }
     }
   }
 }
