@@ -55,7 +55,9 @@ struct TasksViewModel {
       }
   }
   
-  var statistics: Observable<TaskStatistics> {
+  
+//  My solution - Challenge 2
+//  var statistics: Observable<TaskStatistics> {
 //    return self.taskService.tasks()
 //      .map { results in
 //        let dueTasks = results
@@ -69,8 +71,11 @@ struct TasksViewModel {
 //        
 //        return TaskStatistics(todo: dueTasks, done: doneTasks)
 //      }
-    return self.taskService.calculateStatistics()
-  }
+//    return self.taskService.calculateStatistics()
+//  }
+  
+  // Book solution - Challenge 2
+  lazy var statistics: Observable<TaskStatistics> = self.taskService.statistics()
 
   // The use of "this" as the local variable is using the input of self in the lazy initializer. This is because a
   // closure cannot implicitly capture a mutating self parameter, as well as the inability to create weak or unowned
@@ -90,7 +95,8 @@ struct TasksViewModel {
 //      return this.taskService.delete(task: task)
 //    }
 //  }(self)
-  // Book Solution - Challenge 1
+  // Book Solution - Challenge 1 - pretty much the same, this is less verbose and I didn't know 
+  // anything about lazy initialization before this book. I'll need to look more into it
   
   lazy var deleteAction: Action<TaskItem, Void> = { (service: TaskServiceType) in
     return Action { item in

@@ -114,6 +114,7 @@ struct TaskService: TaskServiceType {
     return result ?? .empty()
   }
   
+  // My solution challenge 2
   func calculateStatistics() -> Observable<TaskStatistics> {
     let toDo = withRealm("getting incomplete tasks") { realm -> Observable<Results<TaskItem>> in
       let realm = try Realm()
@@ -133,6 +134,22 @@ struct TaskService: TaskServiceType {
     }
     
     return statistics
-    
+  }
+  
+  // Book solution challenge 2
+  
+  func statistics() -> Observable<TaskStatistics> {
+    let result = withRealm("getting statistics") { realm -> Observable<TaskStatistics> in
+      let tasks = realm.objects(TaskItem.self)
+      let todoTasks = tasks.filter("checked != nil")
+      return .zip(
+        Observable.collection(from: tasks)
+          .map { $0.count },
+        Observable.collection(from: todoTasks)
+          .map { $0.count }) { all, done in
+        (todo: all - done, done: done)
+      }
+    }
+    return result ?? .empty()
   }
 }

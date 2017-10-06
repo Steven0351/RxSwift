@@ -66,6 +66,8 @@ class TasksViewController: UIViewController, BindableType {
       .subscribe(viewModel.editAction.inputs)
       .disposed(by: rx_disposeBag)
     
+    // My solution Challenge 1
+    
     tableView.rx.itemDeleted
       .map { [unowned self] indexPath in
         try! self.dataSource.model(at: indexPath) as! TaskItem
@@ -73,12 +75,25 @@ class TasksViewController: UIViewController, BindableType {
       .subscribe(viewModel.deleteAction.inputs)
       .disposed(by: rx_disposeBag)
     
+//    My solution Challenge 2
     viewModel.statistics
       .map {
         return "To Do: \($0.todo), Completed: \($0.done)"
       }
       .bind(to: statisticsLabel.rx.text)
       .disposed(by: rx_disposeBag)
+    
+    // Book Solution Challenge 2 - The whole reason I ran through this exercise of checking their code
+    // was because when I tested the code of MY implementation, it wouldn't add any information to the 
+    // statistics label...neither does theirs. So for THAT reason, I actually prefer my implementation
+    // as I feel like it's more expressive on what it's doing at a casual glance.
+//    viewModel.statistics
+//      .subscribe(onNext: { [weak self] stats in
+//        let total = stats.todo + stats.done
+//        self?.statisticsLabel.text = "\(total) tasks, \(stats.todo) due."
+//      })
+//      .disposed(by: rx_disposeBag)
+    
   }
   
   fileprivate func configureDataSource() {

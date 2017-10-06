@@ -48,5 +48,10 @@ protocol TaskServiceType {
   
   func tasks() -> Observable<Results<TaskItem>>
   
+  // My solution to challenge 2
   func calculateStatistics() -> Observable<TaskStatistics>
+  
+  // Book solution to challenge 2
+  func statistics() -> Observable<TaskStatistics>
+  
 }
